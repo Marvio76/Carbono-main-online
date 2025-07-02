@@ -1,11 +1,9 @@
-// backend/routes/feedback.js
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../Middleware/middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');  // corrigido aqui
 const Feedback = require('../models/Feedback');
 
 // Rota para salvar um novo feedback
-// POST /api/feedback
 router.post('/', authMiddleware, async (req, res) => {
   const { rating, comment } = req.body;
 
