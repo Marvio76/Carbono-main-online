@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware');
 const CarbonData = require('../models/Carbon');
 
 // Rota para buscar todos os dados de carbono do usuário logado
