@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');  // corrigido aqui
 const Feedback = require('../models/Feedback');
-
 // Rota para salvar um novo feedback
 router.post('/', authMiddleware, async (req, res) => {
   const { rating, comment } = req.body;
