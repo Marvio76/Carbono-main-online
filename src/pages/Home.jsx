@@ -64,12 +64,12 @@ const Home = () => {
                     <Leaf className="h-4 w-4" />
                     <span>Sustentabilidade em Ação</span>
                   </motion.div>
-                  
+
                   <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight">
                     Calcule sua{' '}
                     <span className="gradient-text">Pegada de Carbono</span>
                   </h1>
-                  
+
                   <p className="text-xl text-muted-foreground leading-relaxed">
                     Descubra como suas ações diárias impactam o meio ambiente e encontre maneiras inteligentes de reduzir sua pegada de carbono com nossa plataforma avançada.
                   </p>
@@ -82,7 +82,7 @@ const Home = () => {
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  
+
                   {!user && (
                     <Link to="/login">
                       <Button variant="outline" size="lg" className="border-primary/50 text-primary-foreground hover:bg-primary/10">
@@ -108,11 +108,13 @@ const Home = () => {
                 className="relative"
               >
                 <div className="relative z-10">
-                  <img 
-                    alt="Visualização de carbono"
+                  <img
+                    alt="Visualização 3D de um ecossistema digital em um globo"
                     className="w-full h-auto rounded-2xl shadow-2xl floating-animation"
-                   src='carbono.jpg' />
+                    src="https://images.unsplash.com/photo-1576403103737-dc646cbf7de5"
+                  />
                 </div>
+
               </motion.div>
             </div>
           </div>
@@ -180,7 +182,7 @@ const Home = () => {
               <h2 className="text-4xl lg:text-5xl font-bold tracking-tight">
                 Pronto para fazer a <span className="gradient-text">diferença</span>?
               </h2>
-              
+
               <p className="text-xl text-muted-foreground">
                 Junte-se a milhares de pessoas que já estão monitorando e reduzindo sua pegada de carbono.
               </p>
