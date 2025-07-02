@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://carbono-main-online.onrender.com/api';
 
 export const DataContext = createContext();
 

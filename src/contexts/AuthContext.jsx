@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://carbono-main-online.onrender.com/api';
 
 const AuthContext = createContext();
 
