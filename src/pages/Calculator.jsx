@@ -20,10 +20,10 @@ import {
 
 const Calculator = () => {
   const [formData, setFormData] = useState({
-    transport: { carKm: [0], publicTransport: [0], flights: [0] },
-    energy: { electricity: [100], gas: [1], airConditioning: [0] },
-    food: { meat: [3], dairy: [2], foodWaste: [2] },
-    consumption: { shopping: [2], waste: [1], recycling: [3] }
+    transport: { carKm: 0, publicTransport: 0, flights: 0 },
+    energy: { electricity: 100, gas: 1, airConditioning: 0 },
+    food: { meat: 3, dairy: 2, foodWaste: 2 },
+    consumption: { shopping: 2, waste: 1, recycling: 3 }
   });
 
   const [result, setResult] = useState(null);
@@ -101,11 +101,11 @@ const Calculator = () => {
       recs.push("Sua pegada é moderada. Pequenas mudanças nos seus hábitos diários podem fazer uma grande diferença.");
     }
 
-    if (data.transport.carKm[0] > 100) recs.push("No Transporte, considere usar mais transporte público ou bicicleta.");
-    if (data.energy.electricity[0] > 200) recs.push("Em Energia, tente reduzir o consumo desligando aparelhos não utilizados.");
-    if (data.food.meat[0] > 5) recs.push("Na Alimentação, reduzir o consumo de carne vermelha é uma das ações mais eficazes.");
-    if (data.food.foodWaste[0] > 3) recs.push("Planejar suas compras e refeições ajuda a evitar o desperdício de alimentos.");
-    if (data.consumption.recycling[0] < 3) recs.push("No Consumo, aumentar seus esforços de reciclagem é fundamental.");
+    if (data.transport.carKm > 100) recs.push("No Transporte, considere usar mais transporte público ou bicicleta.");
+    if (data.energy.electricity > 200) recs.push("Em Energia, tente reduzir o consumo desligando aparelhos não utilizados.");
+    if (data.food.meat > 5) recs.push("Na Alimentação, reduzir o consumo de carne vermelha é uma das ações mais eficazes.");
+    if (data.food.foodWaste > 3) recs.push("Planejar suas compras e refeições ajuda a evitar o desperdício de alimentos.");
+    if (data.consumption.recycling < 3) recs.push("No Consumo, aumentar seus esforços de reciclagem é fundamental.");
 
     if (recs.length === 0 && (levelInfo.level === 'Excelente' || levelInfo.level === 'Bom')) {
       recs.push("Parabéns! Seus hábitos são muito sustentáveis. Continue assim!");
@@ -130,7 +130,7 @@ const Calculator = () => {
     Object.keys(formData).forEach(categoryKey => {
       let categoryTotal = 0;
       Object.keys(formData[categoryKey]).forEach(fieldKey => {
-        const value = formData[categoryKey][fieldKey][0] || 0;
+        const value = formData[categoryKey][fieldKey] || 0;
         const factor = factors[categoryKey][fieldKey];
         categoryTotal += value * factor;
       });
@@ -168,13 +168,14 @@ const Calculator = () => {
     }
   };
 
-  // ✅ AQUI a função corrigida para evitar erros na Vercel
   const updateValue = (category, field, value) => {
+    // Aqui, value vem como array [num] do slider, pega só o número
+    const numericValue = Array.isArray(value) ? value[0] : value;
     setFormData(prev => ({
       ...prev,
       [category]: {
         ...prev[category],
-        [field]: Array.isArray(value) ? value : [value]
+        [field]: numericValue
       }
     }));
   };
@@ -218,14 +219,11 @@ const Calculator = () => {
                             <div className="flex justify-between items-center">
                               <Label className="text-foreground">{field.label}</Label>
                               <span className="text-primary font-medium text-lg">
-                                {formData[category.key][field.key]?.[0] ?? 0} {field.unit}
+                                {formData[category.key][field.key]} {field.unit}
                               </span>
                             </div>
                             <Slider
-                              value={Array.isArray(formData[category.key][field.key])
-                                ? formData[category.key][field.key]
-                                : [Number(formData[category.key][field.key]) || 0]
-                              }
+                              value={[formData[category.key][field.key]]}  // slider espera array para valor único
                               onValueChange={(value) => updateValue(category.key, field.key, value)}
                               max={field.max}
                               step={1}
