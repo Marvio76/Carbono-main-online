@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Car, Home, Utensils, ShoppingBag, Calculator as CalcIcon, Leaf, Sparkles } from 'lucide-react';
-import { useData } from '@/contexts/DataContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { useToast } from '@/components/ui/use-toast';
+
+import { useData } from '../contexts/DataContext'; // CORRIGIDO AQUI!
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { Slider } from '../components/ui/slider';
+import { useToast } from '../components/ui/use-toast';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
   AlertDialogFooter
-} from "@/components/ui/alert-dialog";
+} from '../components/ui/alert-dialog';
 
 const Calculator = () => {
   const [formData, setFormData] = useState({
@@ -30,7 +32,7 @@ const Calculator = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
 
-  const { addCarbonData } = useData();
+  const { addCarbonData } = useData() || {}; // Para evitar undefined
   const { toast } = useToast();
 
   const categories = [
@@ -96,80 +98,96 @@ const Calculator = () => {
     const levelInfo = getFootprintLevel(totalFootprint);
 
     if (levelInfo.level === 'Alto') {
-      recs.push("Sua pegada geral é alta. Foque nas categorias com maior impacto para obter melhores resultados.");
+      recs.push("Sua pegada geral é alta. Foque nas categorias com maior impacto.");
     } else if (levelInfo.level === 'Moderado') {
-      recs.push("Sua pegada é moderada. Pequenas mudanças nos seus hábitos diários podem fazer uma grande diferença.");
+      recs.push("Sua pegada é moderada. Pequenas mudanças podem ajudar bastante.");
     }
 
-    if (data.transport.carKm > 100) recs.push("No Transporte, considere usar mais transporte público ou bicicleta.");
-    if (data.energy.electricity > 200) recs.push("Em Energia, tente reduzir o consumo desligando aparelhos não utilizados.");
-    if (data.food.meat > 5) recs.push("Na Alimentação, reduzir o consumo de carne vermelha é uma das ações mais eficazes.");
-    if (data.food.foodWaste > 3) recs.push("Planejar suas compras e refeições ajuda a evitar o desperdício de alimentos.");
-    if (data.consumption.recycling < 3) recs.push("No Consumo, aumentar seus esforços de reciclagem é fundamental.");
+    if (data.transport.carKm > 100) recs.push("No Transporte, use mais transporte público ou bicicleta.");
+    if (data.energy.electricity > 200) recs.push("Em Energia, tente reduzir o consumo desligando aparelhos.");
+    if (data.food.meat > 5) recs.push("Na Alimentação, reduzir carne vermelha ajuda muito.");
+    if (data.food.foodWaste > 3) recs.push("Planeje melhor as compras para evitar desperdício.");
+    if (data.consumption.recycling < 3) recs.push("Aumente seus esforços de reciclagem.");
 
     if (recs.length === 0 && (levelInfo.level === 'Excelente' || levelInfo.level === 'Bom')) {
-      recs.push("Parabéns! Seus hábitos são muito sustentáveis. Continue assim!");
+      recs.push("Parabéns! Seus hábitos já são muito sustentáveis.");
     } else if (recs.length === 0) {
-      recs.push("Seus hábitos parecem equilibrados, mas sempre há espaço para melhorar. Explore pequenas mudanças em cada categoria.");
+      recs.push("Seus hábitos estão equilibrados, mas sempre dá pra melhorar.");
     }
 
     return recs;
   };
 
   const calculateFootprint = async () => {
-    const factors = {
-      transport: { carKm: 0.21, publicTransport: 2.5, flights: 500 },
-      energy: { electricity: 0.2, gas: 15, airConditioning: 0.4 },
-      food: { meat: 6.0, dairy: 1.5, foodWaste: 2.5 },
-      consumption: { shopping: 10, waste: 5, recycling: -2 }
-    };
+    try {
+      const factors = {
+        transport: { carKm: 0.21, publicTransport: 2.5, flights: 500 },
+        energy: { electricity: 0.2, gas: 15, airConditioning: 0.4 },
+        food: { meat: 6.0, dairy: 1.5, foodWaste: 2.5 },
+        consumption: { shopping: 10, waste: 5, recycling: -2 }
+      };
 
-    const categoryResults = {};
-    let total = 0;
+      const categoryResults = {};
+      let total = 0;
 
-    Object.keys(formData).forEach(categoryKey => {
-      let categoryTotal = 0;
-      Object.keys(formData[categoryKey]).forEach(fieldKey => {
-        const value = formData[categoryKey][fieldKey] || 0;
-        const factor = factors[categoryKey][fieldKey];
-        categoryTotal += value * factor;
+      Object.keys(formData).forEach(categoryKey => {
+        let categoryTotal = 0;
+        Object.keys(formData[categoryKey]).forEach(fieldKey => {
+          const value = formData[categoryKey][fieldKey] || 0;
+          const factor = factors[categoryKey][fieldKey] || 0;
+          categoryTotal += value * factor;
+        });
+        categoryResults[categoryKey] = Math.max(0, categoryTotal);
+        total += categoryTotal;
       });
-      categoryResults[categoryKey] = Math.max(0, categoryTotal);
-      total += categoryTotal;
-    });
 
-    const totalFootprint = Math.max(0, total);
-    const generatedRecs = generateRecommendations(formData, totalFootprint);
+      const totalFootprint = Math.max(0, total);
+      const generatedRecs = generateRecommendations(formData, totalFootprint);
 
-    setRecommendations(generatedRecs);
+      const dataForBackend = {
+        totalFootprint,
+        categories: categoryResults,
+        recommendations: generatedRecs
+      };
 
-    const dataForBackend = {
-      totalFootprint: totalFootprint,
-      categories: categoryResults,
-      recommendations: generatedRecs
-    };
+      setResult(dataForBackend);
+      setRecommendations(generatedRecs);
 
-    setResult(dataForBackend);
+      if (typeof addCarbonData !== "function") {
+        toast({
+          title: "Erro",
+          description: "Função de salvar dados não está disponível.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-    const savedData = await addCarbonData(dataForBackend);
+      const savedData = await addCarbonData(dataForBackend);
 
-    if (savedData) {
+      if (savedData) {
+        toast({
+          title: "Cálculo salvo com sucesso!",
+          description: `Sua pegada de carbono é ${totalFootprint.toFixed(1)} kg CO₂`,
+        });
+        setIsModalOpen(true);
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar seu cálculo. Tente novamente.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(error);
       toast({
-        title: "Cálculo salvo com sucesso!",
-        description: `Sua pegada de carbono é ${dataForBackend.totalFootprint.toFixed(1)} kg CO₂`,
-      });
-      setIsModalOpen(true);
-    } else {
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar seu cálculo. Tente novamente.",
+        title: "Erro no cálculo",
+        description: error?.message || "Algo deu errado.",
         variant: "destructive"
       });
     }
   };
 
   const updateValue = (category, field, value) => {
-    // Aqui, value vem como array [num] do slider, pega só o número
     const numericValue = Array.isArray(value) ? value[0] : value;
     setFormData(prev => ({
       ...prev,
@@ -184,17 +202,17 @@ const Calculator = () => {
     <>
       <Helmet>
         <title>Calculadora - EcoTracker</title>
-        <meta name="description" content="Calcule sua pegada de carbono com nossa calculadora inteligente e descubra como reduzir seu impacto ambiental." />
+        <meta name="description" content="Calcule sua pegada de carbono com nossa calculadora." />
       </Helmet>
 
-      <div className="min-h-screen pt-20 px-4 py-8 aurora-bg">
+      <div className="min-h-screen pt-20 px-4 py-8">
         <div className="max-w-7xl mx-auto space-y-12">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
               <span className="gradient-text">Calculadora</span> de Pegada de Carbono
             </h1>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-              Ajuste os valores para refletir seus hábitos e veja o impacto em tempo real.
+              Ajuste os valores e veja seu impacto.
             </p>
           </motion.div>
 
@@ -203,7 +221,12 @@ const Calculator = () => {
               {categories.map((category, categoryIndex) => {
                 const Icon = category.icon;
                 return (
-                  <motion.div key={category.key} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: categoryIndex * 0.1 }}>
+                  <motion.div
+                    key={category.key}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: categoryIndex * 0.1 }}
+                  >
                     <Card className="professional-card">
                       <CardHeader>
                         <CardTitle className="flex items-center space-x-3">
@@ -223,7 +246,7 @@ const Calculator = () => {
                               </span>
                             </div>
                             <Slider
-                              value={[formData[category.key][field.key]]}  // slider espera array para valor único
+                              value={[formData[category.key][field.key]]}
                               onValueChange={(value) => updateValue(category.key, field.key, value)}
                               max={field.max}
                               step={1}
@@ -244,7 +267,7 @@ const Calculator = () => {
               })}
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="text-center">
-                <Button onClick={calculateFootprint} size="lg" className="eco-gradient hover:scale-105 transition-transform duration-200 pulse-green shadow-lg shadow-primary/20">
+                <Button onClick={calculateFootprint} size="lg" className="eco-gradient hover:scale-105 transition-transform duration-200">
                   <CalcIcon className="mr-2 h-5 w-5" />
                   Calcular e Salvar
                 </Button>
@@ -259,7 +282,7 @@ const Calculator = () => {
                       <CardTitle className="text-foreground">Sua Pegada de Carbono</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center space-y-4">
-                      <div className={`mx-auto w-24 h-24 ${getFootprintLevel(result.totalFootprint).bg} rounded-full flex items-center justify-center shadow-lg`}>
+                      <div className={`mx-auto w-24 h-24 ${getFootprintLevel(result.totalFootprint).bg} rounded-full flex items-center justify-center`}>
                         <Leaf className="h-12 w-12 text-white" />
                       </div>
                       <div className="space-y-2">
@@ -281,17 +304,11 @@ const Calculator = () => {
                       {Object.entries(result.categories).map(([key, value]) => {
                         const category = categories.find(c => c.key === key);
                         const Icon = category.icon;
-                        const nomesDasCategorias = {
-                          transport: 'Transporte',
-                          energy: 'Energia',
-                          food: 'Alimentação',
-                          consumption: 'Consumo'
-                        };
                         return (
                           <div key={key} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                             <div className="flex items-center space-x-3">
                               <Icon className={`h-5 w-5 ${category.color}`} />
-                              <span className="text-muted-foreground">{nomesDasCategorias[key] || category.title}</span>
+                              <span className="text-muted-foreground">{category.title}</span>
                             </div>
                             <span className="text-foreground font-medium">
                               {value.toFixed(1)} kg CO₂
@@ -325,7 +342,7 @@ const Calculator = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction>Entendido!</AlertDialogAction>
+            <AlertDialogAction>Entendi!</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
